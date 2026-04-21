@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join - Realtime Device Tracker</title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body>
+    <div class="join-wrapper">
+      <div class="join-card">
+        <h1>Realtime Device Tracker</h1>
+        <p class="join-subtitle">Enter your details to join the session</p>
+
+        <% if (error) { %>
+          <div class="join-error"><%= error %></div>
+        <% } %>
+
+        <form action="/join" method="POST">
+          <div class="form-group">
+            <label for="name">Your Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Enter your name"
+              autocomplete="off"
+              required
+            />
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="leaderToggle" />
+              Join as Ride Leader
+            </label>
+          </div>
+
+          <div class="form-group" id="leaderPasswordGroup" style="display:none">
+            <label for="leaderPassword">Leader Password</label>
+            <input
+              type="password"
+              id="leaderPassword"
+              name="leaderPassword"
+              placeholder="Enter leader password"
+            />
+          </div>
+
+          <input type="hidden" name="role" id="roleInput" value="member" />
+
+          <button type="submit" class="join-btn">Join Session</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      const toggle = document.getElementById("leaderToggle");
+      const passwordGroup = document.getElementById("leaderPasswordGroup");
+      const roleInput = document.getElementById("roleInput");
+
+      toggle.addEventListener("change", () => {
+        const isLeader = toggle.checked;
+        passwordGroup.style.display = isLeader ? "block" : "none";
+        roleInput.value = isLeader ? "leader" : "member";
+      });
+    </script>
+  </body>
+</html>

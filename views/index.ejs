@@ -24,12 +24,25 @@
   <body>
     <div>
       <h1>Realtime Device Tracker</h1>
+      <div class="user-info">
+        <span>
+          <%= user.name %>
+          <% if (user.role === 'leader') { %>
+            <span class="leader-badge">Ride Leader</span>
+          <% } %>
+        </span>
+        <a href="/logout" class="logout-btn">Leave</a>
+      </div>
     </div>
     <div id="map" style="height: 500px"></div>
     <div id="location-data">
       <h2>Location Data</h2>
       <ul id="location-list"></ul>
     </div>
+
+    <script>
+      const currentUser = <%- JSON.stringify(user) %>;
+    </script>
 
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
