@@ -60,6 +60,7 @@ io.on("connection", function (socket) {
       id: socket.id,
       name: socket.user.name,
       role: socket.user.role,
+      phone: socket.user.phone || "",
       ...data,
     });
   });
@@ -83,7 +84,7 @@ app.get("/join", (req, res) => {
 });
 
 app.post("/join", (req, res) => {
-  const { name, role, leaderPassword } = req.body;
+  const { name, role, leaderPassword, phone } = req.body;
 
   if (!name || !name.trim()) {
     return res.render("join", { error: "Please enter your name." });
@@ -95,6 +96,7 @@ app.post("/join", (req, res) => {
   const user = {
     name: name.trim(),
     role: role === "leader" ? "leader" : "member",
+    phone: phone && phone.trim() ? phone.trim() : "",
   };
   const token = jwt.sign(user, JWT_SECRET, { expiresIn: "8h" });
   res.cookie("token", token, { httpOnly: true, maxAge: 8 * 60 * 60 * 1000 });

@@ -2,8 +2,11 @@ const socket = io();
 
 let currentLocation = null;
 
-if (navigator.geolocation) {
-  navigator.geolocation.watchPosition(
+const INTERVAL_MS = 3000;
+
+const sendLocation = () => {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
     (position) => {
       const { latitude, longitude } = position.coords;
       currentLocation = { latitude, longitude };
@@ -18,7 +21,14 @@ if (navigator.geolocation) {
       maximumAge: 0,
     }
   );
-}
+};
+
+sendLocation();
+const locationInterval = setInterval(sendLocation, INTERVAL_MS);
+
+window.addEventListener("beforeunload", () => {
+  clearInterval(locationInterval);
+});
 
 const map = L.map("map").setView([0, 0], 16);
 
@@ -28,6 +38,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 
 const markers = {};
 const offsets = {};
+const lastSeen = {};
 const markerClusterGroup = L.markerClusterGroup();
 map.addLayer(markerClusterGroup);
 
@@ -47,6 +58,24 @@ const getOffset = (id) => {
     ];
   }
   return offsets[id];
+};
+
+const buildPopupHtml = (data) => {
+  const timeStr = lastSeen[data.id]
+    ? new Date(lastSeen[data.id]).toLocaleTimeString()
+    : "—";
+  const roleBadge =
+    data.role === "leader"
+      ? `<span style="background:#007bff;color:white;font-size:0.75em;border-radius:3px;padding:1px 5px;margin-left:4px;font-weight:600;vertical-align:middle">Leader</span>`
+      : "";
+  const phoneRow = data.phone
+    ? `<div style="margin-top:4px"><span style="color:#888;font-size:0.82em">Phone: </span><a href="tel:${data.phone}" style="color:#007bff;text-decoration:none">${data.phone}</a></div>`
+    : "";
+  return `<div style="min-width:130px;line-height:1.5">
+    <strong>${data.name}</strong>${roleBadge}
+    ${phoneRow}
+    <div style="margin-top:4px;color:#888;font-size:0.8em">Updated: ${timeStr}</div>
+  </div>`;
 };
 
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -83,11 +112,14 @@ socket.on("receive-location", (data) => {
   const displayLat = latitude + offsetLat;
   const displayLng = longitude + offsetLng;
 
+  lastSeen[id] = Date.now();
+
   if (markers[id]) {
     markers[id].setLatLng([displayLat, displayLng]);
+    markers[id].setPopupContent(buildPopupHtml(data));
   } else {
     markers[id] = L.marker([displayLat, displayLng])
-      .bindPopup(name)
+      .bindPopup(buildPopupHtml(data))
       .addTo(markerClusterGroup);
     if (id === socket.id) {
       map.setView([latitude, longitude]);
@@ -101,6 +133,7 @@ socket.on("user-disconnected", (id) => {
     markerClusterGroup.removeLayer(markers[id]);
     delete markers[id];
     delete offsets[id];
+    delete lastSeen[id];
   }
   const locationItem = document.getElementById(`location-${id}`);
   if (locationItem) locationItem.remove();
