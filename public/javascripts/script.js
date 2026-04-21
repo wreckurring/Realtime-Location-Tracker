@@ -45,21 +45,44 @@ const lastSeen = {};
 const positions = {};
 const userDataMap = {};
 const stoppedState = {};
+const popupOpenedAt = {};
 const markerClusterGroup = L.markerClusterGroup();
 map.addLayer(markerClusterGroup);
 
-const makeIcon = (cssClass) =>
+map.on("popupopen", (e) => {
+  Object.keys(markers).forEach((id) => {
+    if (markers[id].getPopup() === e.popup) {
+      popupOpenedAt[id] = Date.now();
+    }
+  });
+});
+
+map.on("popupclose", (e) => {
+  Object.keys(markers).forEach((id) => {
+    if (markers[id].getPopup() === e.popup) {
+      delete popupOpenedAt[id];
+    }
+  });
+});
+
+const makePinIcon = (color) =>
   L.divIcon({
     className: "",
-    html: `<div class="${cssClass}"></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+    html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
+      <path d="M12 0C5.4 0 0 5.4 0 12c0 7.2 12 24 12 24S24 19.2 24 12C24 5.4 18.6 0 12 0z"
+        fill="${color}" stroke="rgba(0,0,0,0.25)" stroke-width="1"/>
+      <circle cx="12" cy="12" r="5" fill="white" opacity="0.75"/>
+    </svg>`,
+    iconSize: [24, 36],
+    iconAnchor: [12, 36],
+    popupAnchor: [0, -38],
   });
 
-const leaderIcon = makeIcon("leader-marker");
-const memberIcon = makeIcon("member-marker");
-const stoppedIcon = makeIcon("stopped-marker");
-const waypointIcon = makeIcon("waypoint-marker");
+const leaderIcon      = makePinIcon("#27ae60");
+const memberIcon      = makePinIcon("#2980b9");
+const stoppedIcon     = makePinIcon("#e74c3c");
+const waypointIcon    = makePinIcon("#e67e22");
+const destinationIcon = makePinIcon("#8e44ad");
 
 const getActiveIcon = (role) =>
   role === "leader" ? leaderIcon : memberIcon;
@@ -158,13 +181,18 @@ socket.on("receive-location", (data) => {
   positions[id] = { lat: latitude, lng: longitude };
   userDataMap[id] = data;
 
+  const POPUP_LOCK_MS = 5000;
+  const popupLocked = popupOpenedAt[id] && Date.now() - popupOpenedAt[id] < POPUP_LOCK_MS;
+
   if (markers[id]) {
     markers[id].setLatLng([displayLat, displayLng]);
     if (stoppedState[id]) {
       stoppedState[id] = false;
       markers[id].setIcon(getActiveIcon(role));
     }
-    markers[id].setPopupContent(buildPopupHtml(data));
+    if (!popupLocked) {
+      markers[id].setPopupContent(buildPopupHtml(data));
+    }
   } else {
     markers[id] = L.marker([displayLat, displayLng], { icon: getActiveIcon(role) })
       .bindPopup(buildPopupHtml(data))
@@ -185,6 +213,7 @@ socket.on("user-disconnected", (id) => {
     delete positions[id];
     delete userDataMap[id];
     delete stoppedState[id];
+    delete popupOpenedAt[id];
   }
   const item = document.getElementById(`location-${id}`);
   if (item) item.remove();
@@ -293,10 +322,49 @@ if (currentUser.role === "leader") {
     if (e.key === "Enter") announcementBtn.click();
   });
 
-  // Waypoint placement
+  // Destination
+  let destinationMarker = null;
+  let destinationMode = false;
+
+  const destinationBtn = document.getElementById("destination-btn");
+  const clearDestinationBtn = document.getElementById("clear-destination-btn");
+  const destinationHint = document.getElementById("destination-hint");
+
+  destinationBtn.addEventListener("click", () => {
+    destinationMode = !destinationMode;
+    if (destinationMode) {
+      destinationBtn.textContent = "✕ Cancel";
+      destinationBtn.classList.add("active");
+      destinationHint.style.display = "block";
+      map.getContainer().style.cursor = "crosshair";
+    } else {
+      destinationBtn.textContent = "📍 Set Destination";
+      destinationBtn.classList.remove("active");
+      destinationHint.style.display = "none";
+      map.getContainer().style.cursor = "";
+    }
+  });
+
+  clearDestinationBtn.addEventListener("click", () => {
+    socket.emit("clear-destination");
+  });
+
+  // Waypoint placement / destination placement
   let manualMarker = null;
   map.on("click", (e) => {
     const { lat, lng } = e.latlng;
+
+    if (destinationMode) {
+      const name = prompt("Destination name (optional):") || "Destination";
+      socket.emit("set-destination", { lat, lng, name });
+      destinationMode = false;
+      destinationBtn.textContent = "📍 Set Destination";
+      destinationBtn.classList.remove("active");
+      destinationHint.style.display = "none";
+      map.getContainer().style.cursor = "";
+      return;
+    }
+
     const userConfirmed = window.confirm(
       `Add a waypoint at ${lat.toFixed(5)}, ${lng.toFixed(5)}?`
     );
@@ -305,15 +373,48 @@ if (currentUser.role === "leader") {
       manualMarker = L.marker([lat, lng], { icon: waypointIcon })
         .bindPopup("Waypoint")
         .addTo(map);
-      const distance = currentLocation
-        ? calculateDistance(
-            currentLocation.latitude,
-            currentLocation.longitude,
-            lat,
-            lng
-          )
-        : null;
       updateLocationList("waypoint", "Waypoint", lat, lng, false);
     }
   });
 }
+
+// Destination events (all users)
+let destinationMarkerGlobal = null;
+
+socket.on("destination-set", ({ lat, lng, name }) => {
+  if (destinationMarkerGlobal) map.removeLayer(destinationMarkerGlobal);
+  destinationMarkerGlobal = L.marker([lat, lng], { icon: destinationIcon })
+    .bindPopup(`<div style="min-width:100px"><strong>📍 ${name}</strong></div>`)
+    .addTo(map);
+
+  const item = document.getElementById("location-destination");
+  if (!item) {
+    const li = document.createElement("li");
+    li.id = "location-destination";
+    li.innerHTML = `<strong>📍 ${name}</strong>: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    document.getElementById("location-list").appendChild(li);
+  } else {
+    item.innerHTML = `<strong>📍 ${name}</strong>: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  }
+
+  if (currentUser.role === "leader") {
+    document.getElementById("clear-destination-btn").style.display = "inline-block";
+    document.getElementById("destination-btn").textContent = "📍 Set Destination";
+    document.getElementById("destination-btn").classList.remove("active");
+  }
+
+  showToast(`📍 Destination set: ${name}`);
+});
+
+socket.on("destination-cleared", () => {
+  if (destinationMarkerGlobal) {
+    map.removeLayer(destinationMarkerGlobal);
+    destinationMarkerGlobal = null;
+  }
+  const item = document.getElementById("location-destination");
+  if (item) item.remove();
+  if (currentUser.role === "leader") {
+    document.getElementById("clear-destination-btn").style.display = "none";
+  }
+  showToast("📍 Destination cleared.");
+});

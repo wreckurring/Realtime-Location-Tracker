@@ -52,8 +52,14 @@ io.use((socket, next) => {
   }
 });
 
+let currentDestination = null;
+
 io.on("connection", function (socket) {
   console.log(`User connected: ${socket.id} (${socket.user.name}, ${socket.user.role})`);
+
+  if (currentDestination) {
+    socket.emit("destination-set", currentDestination);
+  }
 
   socket.on("send-location", function (data) {
     io.emit("receive-location", {
@@ -82,6 +88,18 @@ io.on("connection", function (socket) {
   socket.on("stop-ride", function () {
     if (socket.user.role !== "leader") return;
     io.emit("ride-stopped");
+  });
+
+  socket.on("set-destination", function ({ lat, lng, name }) {
+    if (socket.user.role !== "leader") return;
+    currentDestination = { lat, lng, name };
+    io.emit("destination-set", currentDestination);
+  });
+
+  socket.on("clear-destination", function () {
+    if (socket.user.role !== "leader") return;
+    currentDestination = null;
+    io.emit("destination-cleared");
   });
 
   socket.on("disconnect", function () {
