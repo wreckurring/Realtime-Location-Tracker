@@ -34,6 +34,15 @@
         <a href="/logout" class="logout-btn">Leave</a>
       </div>
     </div>
+    <% if (user.role === 'leader') { %>
+    <div id="announcement-bar">
+      <input type="text" id="announcement-input" placeholder="Send announcement to all riders..." maxlength="200" />
+      <button id="announcement-btn">Send</button>
+    </div>
+    <% } %>
+
+    <div id="toast-container"></div>
+
     <div id="map" style="height: 500px"></div>
     <div id="location-data">
       <h2>Location Data</h2>

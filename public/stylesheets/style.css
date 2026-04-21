@@ -118,14 +118,117 @@ body > div:first-child h1 {
   border-bottom: none;
 }
 
-/* ── Red waypoint marker ── */
-.red-marker {
+/* ── User markers ── */
+.leader-marker,
+.member-marker,
+.stopped-marker,
+.waypoint-marker {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #e74c3c;
   border: 2px solid white;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.leader-marker  { background: #27ae60; }
+.member-marker  { background: #2980b9; }
+.stopped-marker { background: #e74c3c; }
+.waypoint-marker { background: #e74c3c; }
+
+/* ── Announcement bar (leader only) ── */
+#announcement-bar {
+  width: 90%;
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+#announcement-input {
+  flex: 1;
+  padding: 0.6em 0.9em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95em;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+#announcement-input:focus {
+  border-color: #007bff;
+}
+
+#announcement-btn {
+  padding: 0.6em 1.2em;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+#announcement-btn:hover {
+  background: #0069d9;
+}
+
+/* ── Toast notifications ── */
+#toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: #333;
+  color: white;
+  padding: 0.7em 1.4em;
+  border-radius: 8px;
+  font-size: 0.95em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s, transform 0.3s;
+  max-width: 360px;
+  text-align: center;
+}
+
+.toast.toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Location list — clickable riders ── */
+.clickable-rider {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.clickable-rider:hover {
+  background: #f0f7ff;
+}
+
+.stopped-tag {
+  display: inline-block;
+  margin-left: 8px;
+  background: #e74c3c;
+  color: white;
+  font-size: 0.72em;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
 }
 
 /* ── Join page ── */

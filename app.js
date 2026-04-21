@@ -65,6 +65,15 @@ io.on("connection", function (socket) {
     });
   });
 
+  socket.on("send-announcement", function ({ message }) {
+    if (socket.user.role !== "leader") return;
+    if (!message || !message.trim()) return;
+    io.emit("receive-announcement", {
+      message: message.trim(),
+      from: socket.user.name,
+    });
+  });
+
   socket.on("disconnect", function () {
     console.log(`User disconnected: ${socket.id}`);
     io.emit("user-disconnected", socket.id);
