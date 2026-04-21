@@ -135,6 +135,76 @@ body > div:first-child h1 {
 .stopped-marker { background: #e74c3c; }
 .waypoint-marker { background: #e74c3c; }
 
+/* ── Ride status bar (visible to all) ── */
+#ride-status-bar {
+  width: 90%;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em 0.9em;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  color: #555;
+  box-sizing: border-box;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ccc;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.status-dot.active {
+  background: #27ae60;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+}
+
+/* ── Leader controls (ride toggle + announcement) ── */
+#leader-controls {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+
+.start-btn,
+.stop-btn {
+  padding: 0.65em 1.6em;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.start-btn {
+  background: #27ae60;
+  color: white;
+}
+
+.start-btn:hover {
+  background: #219150;
+}
+
+.stop-btn {
+  background: #e74c3c;
+  color: white;
+}
+
+.stop-btn:hover {
+  background: #c0392b;
+}
+
 /* ── Announcement bar (leader only) ── */
 #announcement-bar {
   width: 90%;

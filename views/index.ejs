@@ -34,10 +34,18 @@
         <a href="/logout" class="logout-btn">Leave</a>
       </div>
     </div>
+    <div id="ride-status-bar">
+      <span id="ride-status-dot"></span>
+      <span id="ride-status-text">Ride not started</span>
+    </div>
+
     <% if (user.role === 'leader') { %>
-    <div id="announcement-bar">
-      <input type="text" id="announcement-input" placeholder="Send announcement to all riders..." maxlength="200" />
-      <button id="announcement-btn">Send</button>
+    <div id="leader-controls">
+      <button id="ride-toggle-btn" class="start-btn">Start Ride</button>
+      <div id="announcement-bar">
+        <input type="text" id="announcement-input" placeholder="Send announcement to all riders..." maxlength="200" />
+        <button id="announcement-btn">Send</button>
+      </div>
     </div>
     <% } %>
 

@@ -74,6 +74,16 @@ io.on("connection", function (socket) {
     });
   });
 
+  socket.on("start-ride", function () {
+    if (socket.user.role !== "leader") return;
+    io.emit("ride-started");
+  });
+
+  socket.on("stop-ride", function () {
+    if (socket.user.role !== "leader") return;
+    io.emit("ride-stopped");
+  });
+
   socket.on("disconnect", function () {
     console.log(`User disconnected: ${socket.id}`);
     io.emit("user-disconnected", socket.id);

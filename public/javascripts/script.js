@@ -5,6 +5,8 @@ let currentLocation = null;
 const INTERVAL_MS = 3000;
 const STOPPED_THRESHOLD_MS = 12000;
 
+let rideStarted = false;
+
 const sendLocation = () => {
   if (!navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(
@@ -188,8 +190,9 @@ socket.on("user-disconnected", (id) => {
   if (item) item.remove();
 });
 
-// Stopped detection — check every 5s
+// Stopped detection — check every 5s, only when ride is active
 setInterval(() => {
+  if (!rideStarted) return;
   const now = Date.now();
   Object.keys(lastSeen).forEach((id) => {
     if (!markers[id] || stoppedState[id]) return;
@@ -204,6 +207,44 @@ setInterval(() => {
     }
   });
 }, 5000);
+
+const clearAllStoppedStates = () => {
+  Object.keys(stoppedState).forEach((id) => {
+    if (!stoppedState[id] || !markers[id]) return;
+    stoppedState[id] = false;
+    const role = userDataMap[id] ? userDataMap[id].role : "member";
+    markers[id].setIcon(getActiveIcon(role));
+    if (userDataMap[id]) {
+      const { name, latitude, longitude } = userDataMap[id];
+      updateLocationList(id, name, latitude, longitude, false);
+      markers[id].setPopupContent(buildPopupHtml(userDataMap[id]));
+    }
+  });
+};
+
+const setRideStatus = (started) => {
+  rideStarted = started;
+  const dot = document.getElementById("ride-status-dot");
+  const text = document.getElementById("ride-status-text");
+  if (started) {
+    dot.className = "status-dot active";
+    text.textContent = "Ride in progress";
+  } else {
+    dot.className = "status-dot";
+    text.textContent = "Ride not started";
+  }
+};
+
+socket.on("ride-started", () => {
+  setRideStatus(true);
+  showToast("🚴 Ride started!");
+});
+
+socket.on("ride-stopped", () => {
+  setRideStatus(false);
+  clearAllStoppedStates();
+  showToast("🏁 Ride ended.");
+});
 
 // Announcements
 const showToast = (message) => {
@@ -224,6 +265,20 @@ socket.on("receive-announcement", ({ message, from }) => {
 });
 
 if (currentUser.role === "leader") {
+  const rideToggleBtn = document.getElementById("ride-toggle-btn");
+
+  rideToggleBtn.addEventListener("click", () => {
+    if (!rideStarted) {
+      socket.emit("start-ride");
+      rideToggleBtn.textContent = "Stop Ride";
+      rideToggleBtn.className = "stop-btn";
+    } else {
+      socket.emit("stop-ride");
+      rideToggleBtn.textContent = "Start Ride";
+      rideToggleBtn.className = "start-btn";
+    }
+  });
+
   const announcementBtn = document.getElementById("announcement-btn");
   const announcementInput = document.getElementById("announcement-input");
 
