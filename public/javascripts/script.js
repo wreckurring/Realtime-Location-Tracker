@@ -3,7 +3,8 @@ const socket = io();
 let currentLocation = null;
 
 const INTERVAL_MS = 3000;
-const STOPPED_THRESHOLD_MS = 12000;
+const STOPPED_CHECK_INTERVAL_MS = 15000;
+const STOPPED_DISTANCE_THRESHOLD_M = 10;
 
 let rideStarted = false;
 
@@ -46,6 +47,7 @@ const positions = {};
 const userDataMap = {};
 const stoppedState = {};
 const popupOpenedAt = {};
+const lastCheckPosition = {};
 const markerClusterGroup = L.markerClusterGroup();
 map.addLayer(markerClusterGroup);
 
@@ -181,15 +183,15 @@ socket.on("receive-location", (data) => {
   positions[id] = { lat: latitude, lng: longitude };
   userDataMap[id] = data;
 
+  if (!lastCheckPosition[id]) {
+    lastCheckPosition[id] = { lat: latitude, lng: longitude };
+  }
+
   const POPUP_LOCK_MS = 5000;
   const popupLocked = popupOpenedAt[id] && Date.now() - popupOpenedAt[id] < POPUP_LOCK_MS;
 
   if (markers[id]) {
     markers[id].setLatLng([displayLat, displayLng]);
-    if (stoppedState[id]) {
-      stoppedState[id] = false;
-      markers[id].setIcon(getActiveIcon(role));
-    }
     if (!popupLocked) {
       markers[id].setPopupContent(buildPopupHtml(data));
     }
@@ -214,28 +216,44 @@ socket.on("user-disconnected", (id) => {
     delete userDataMap[id];
     delete stoppedState[id];
     delete popupOpenedAt[id];
+    delete lastCheckPosition[id];
   }
   const item = document.getElementById(`location-${id}`);
   if (item) item.remove();
 });
 
-// Stopped detection — check every 5s, only when ride is active
+// Stopped detection — every 15s compare position to snapshot, only when ride is active
 setInterval(() => {
   if (!rideStarted) return;
-  const now = Date.now();
-  Object.keys(lastSeen).forEach((id) => {
-    if (!markers[id] || stoppedState[id]) return;
-    if (now - lastSeen[id] > STOPPED_THRESHOLD_MS) {
+  Object.keys(positions).forEach((id) => {
+    if (!markers[id] || !lastCheckPosition[id]) return;
+
+    const prev = lastCheckPosition[id];
+    const curr = positions[id];
+    const dist = calculateDistance(prev.lat, prev.lng, curr.lat, curr.lng);
+    const moved = dist >= STOPPED_DISTANCE_THRESHOLD_M;
+
+    if (!moved && !stoppedState[id]) {
       stoppedState[id] = true;
       markers[id].setIcon(stoppedIcon);
       if (userDataMap[id]) {
         const { name, latitude, longitude } = userDataMap[id];
         updateLocationList(id, name, latitude, longitude, true);
-        markers[id].setPopupContent(buildPopupHtml(userDataMap[id]));
+        if (!popupOpenedAt[id]) markers[id].setPopupContent(buildPopupHtml(userDataMap[id]));
+      }
+    } else if (moved && stoppedState[id]) {
+      stoppedState[id] = false;
+      markers[id].setIcon(getActiveIcon(userDataMap[id] ? userDataMap[id].role : "member"));
+      if (userDataMap[id]) {
+        const { name, latitude, longitude } = userDataMap[id];
+        updateLocationList(id, name, latitude, longitude, false);
+        if (!popupOpenedAt[id]) markers[id].setPopupContent(buildPopupHtml(userDataMap[id]));
       }
     }
+
+    lastCheckPosition[id] = { lat: curr.lat, lng: curr.lng };
   });
-}, 5000);
+}, STOPPED_CHECK_INTERVAL_MS);
 
 const clearAllStoppedStates = () => {
   Object.keys(stoppedState).forEach((id) => {
