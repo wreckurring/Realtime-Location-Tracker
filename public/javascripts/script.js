@@ -36,7 +36,7 @@ window.addEventListener("beforeunload", () => {
 const map = L.map("map").setView([0, 0], 16);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "Realtime Location Tracker",
+  attribution: "CycloTrack",
 }).addTo(map);
 
 const markers = {};

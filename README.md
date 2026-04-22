@@ -1,51 +1,84 @@
-# Real-Time Location Tracking
-
+# CycloTrack
 
 ![2024-07-15](https://github.com/user-attachments/assets/51021220-d6c5-44fd-a08c-36061af891fe)
 
-
-## Overview
-
-Welcome to the **Real-Time Location Tracking** project! This web application is designed for real-time location tracking and monitoring. It utilizes WebSocket technology to provide real-time updates, displaying the location of tracked entities on a map. All connected users can view everyone's location on the map in real-time.
+A real-time cycling group tracker. The ride leader manages the session while all riders see each other on a live map.
 
 ## Features
 
-- **Real-time Location Updates**: Uses WebSocket technology for instant location updates.
-- **Interactive Map**: Displays locations on an interactive map using OpenStreetMap and Leaflet.js.
-- **Multi-user Support**: Multiple connected users can view locations simultaneously.
+**For all riders**
+- Live location updates every 3 seconds on an interactive map
+- Colour-coded pin markers for each rider type
+- Click any rider in the location list to fly the map to their position
+- Tap a marker to see name, phone number, and last update time (popup stays open for 5 seconds)
+- Toast notifications for ride events and announcements
+- Stopped rider detection — marker turns red if no update for 12+ seconds (only active during a ride)
 
-## Technologies Used
+**For the ride leader**
+- Start / Stop Ride controls — stopped detection only activates after the ride begins
+- Set a destination pin visible to all riders (persists for riders who join mid-ride)
+- Drop waypoint pins at any map location
+- Send announcements that appear as toasts for all riders
 
-- **JavaScript**: The programming language used for both client-side and server-side logic.
-- **Node.js**: JavaScript runtime built on Chrome's V8 JavaScript engine.
-- **Express.js**: A fast, unopinionated, minimalist web framework for Node.js.
-- **Socket.IO**: Enables real-time, bidirectional communication between the server and clients.
-- **OpenStreetMap**: Provides the map data.
-- **Leaflet.js**: An open-source JavaScript library for mobile-friendly interactive maps.
+**Map legend (visible to all)**
 
-## Installation
+| Marker | Meaning |
+|---|---|
+| 🟢 Green | Ride Leader |
+| 🔵 Blue | Active Rider |
+| 🔴 Red | Stopped Rider |
+| 🟠 Orange | Waypoint |
+| 🟣 Purple | Destination |
+
+## Tech Stack
+
+- **Node.js + Express** — server and routing
+- **Socket.IO** — real-time bidirectional communication
+- **EJS** — server-side templating
+- **JWT + cookie-parser** — session auth (8-hour tokens, httpOnly cookies)
+- **Leaflet.js + MarkerCluster** — interactive map with clustered markers
+- **OpenStreetMap** — map tiles
+
+## Getting Started
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/realtime-location-tracker.git
+    git clone https://github.com/wreckurring/Realtime-Location-Tracker.git
+    cd Realtime-Location-Tracker
     ```
-2. Navigate to the project directory:
-    ```bash
-    cd realtime_location_tracker
-    ```
-3. Install the dependencies:
+
+2. Install dependencies:
     ```bash
     npm install
     ```
 
-## Usage
+3. Set environment variables (or let them default for local dev):
 
-1. Start the server:
+    | Variable | Description | Default |
+    |---|---|---|
+    | `JWT_SECRET` | Secret for signing JWT tokens | `dev-secret-change-in-production` |
+    | `LEADER_PASSWORD` | Password to join as ride leader | `leader123` |
+    | `PORT` | Server port | `3000` |
+
+4. Start the server:
     ```bash
-    node app.js
+    npm start
     ```
-2. Open your web browser and go to `http://localhost:3000` to view the application.
 
-## Demo
+5. Open `http://localhost:3000` — you will be redirected to the join page.
 
-You can view a live demo of the project [here](https://realtime-location-trackernp.onrender.com/). *(Please note that it may take a few seconds for the server to wake up.)*
+## Joining a Session
+
+- Enter your name and optionally a phone number
+- To join as **Ride Leader**, check the toggle and enter the leader password
+- Regular riders just enter their name and join
+
+## Deployment
+
+Deployed on [Render](https://render.com) as a single Web Service (backend + frontend in one).
+
+- **Build command:** `npm install`
+- **Start command:** `npm start`
+- Set `JWT_SECRET` and `LEADER_PASSWORD` as environment variables in the Render dashboard
+
+**Live demo:** [realtime-location-tracker-pehe.onrender.com](https://realtime-location-tracker-pehe.onrender.com) *(may take a few seconds to wake up on the free tier)*
