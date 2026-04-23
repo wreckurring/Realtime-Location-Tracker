@@ -360,7 +360,8 @@ body > div:first-child h1 {
 }
 
 .form-group input[type="text"],
-.form-group input[type="password"] {
+.form-group input[type="password"],
+.form-group input[type="tel"] {
   width: 100%;
   padding: 0.65em 0.9em;
   border: 1px solid #ccc;
@@ -371,7 +372,8 @@ body > div:first-child h1 {
 }
 
 .form-group input[type="text"]:focus,
-.form-group input[type="password"]:focus {
+.form-group input[type="password"]:focus,
+.form-group input[type="tel"]:focus {
   border-color: #007bff;
   outline: none;
 }
@@ -450,6 +452,394 @@ body > div:first-child h1 {
 .legend-item svg {
   flex-shrink: 0;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+}
+
+/* ── History link in header ── */
+.history-link {
+  color: white;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 0.85em;
+  transition: background 0.15s;
+}
+
+.history-link:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Distance to destination ── */
+.dest-distance {
+  color: #888;
+  font-size: 0.82em;
+  margin-left: 2px;
+}
+
+/* ── Leader notes section ── */
+#notes-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+#note-input {
+  width: 100%;
+  padding: 0.6em 0.9em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.92em;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+#note-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+#save-note-btn {
+  align-self: flex-start;
+  padding: 0.5em 1.2em;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#save-note-btn:hover {
+  background: #0069d9;
+}
+
+#saved-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.saved-note {
+  background: #f8f9fa;
+  border-left: 3px solid #007bff;
+  padding: 5px 10px;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.85em;
+  color: #444;
+}
+
+/* ── Post-ride modal ── */
+#post-ride-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#post-ride-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2em;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+}
+
+#post-ride-card h3 {
+  margin: 0 0 0.3em;
+  color: #007bff;
+}
+
+#post-ride-card p {
+  margin: 0 0 1em;
+  color: #666;
+  font-size: 0.9em;
+}
+
+#post-note-input {
+  width: 100%;
+  padding: 0.65em 0.9em;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95em;
+  resize: vertical;
+  box-sizing: border-box;
+  font-family: inherit;
+  transition: border-color 0.15s;
+  margin-bottom: 1em;
+}
+
+#post-note-input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.post-ride-btns {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── History page ── */
+body.history-page {
+  align-items: stretch;
+}
+
+.history-topbar {
+  width: 100%;
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0.8em 1.5em;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  gap: 1em;
+  margin-bottom: 24px;
+}
+
+.history-topbar h1 {
+  margin: 0;
+  font-size: 1.2em;
+  flex: 1;
+  text-align: center;
+}
+
+.back-link {
+  color: white;
+  text-decoration: none;
+  font-size: 0.9em;
+  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 4px;
+  padding: 4px 10px;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.back-link:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.topbar-user {
+  font-size: 0.85em;
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.stat-strip {
+  display: flex;
+  gap: 16px;
+  padding: 0 5%;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 120px;
+  background: white;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #007bff;
+  line-height: 1.1;
+}
+
+.stat-value.dest-name {
+  font-size: 1.1em;
+  word-break: break-word;
+}
+
+.stat-label {
+  font-size: 0.8em;
+  color: #888;
+  margin-top: 4px;
+}
+
+.no-trips {
+  text-align: center;
+  color: #888;
+  padding: 3em;
+  font-size: 1em;
+}
+
+.trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 5%;
+  padding-bottom: 32px;
+}
+
+.trip-card {
+  background: white;
+  border-radius: 10px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.demo-card {
+  border-left: 4px solid #007bff;
+}
+
+.trip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1em;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.trip-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trip-date {
+  font-weight: 700;
+  color: #333;
+}
+
+.demo-badge {
+  background: #e3f0ff;
+  color: #007bff;
+  font-size: 0.75em;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+.trip-duration {
+  color: #888;
+  font-size: 0.88em;
+}
+
+.trip-leader {
+  font-size: 0.88em;
+  color: #555;
+  white-space: nowrap;
+}
+
+.trip-dest {
+  font-size: 0.95em;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.dest-pin {
+  margin-right: 4px;
+}
+
+.trip-stats-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.trip-stat {
+  font-size: 0.85em;
+  color: #666;
+}
+
+.waypoints-row {
+  font-size: 0.85em;
+  color: #555;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.section-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.route-string {
+  color: #555;
+}
+
+.wp-name {
+  color: #e67e22;
+}
+
+.notes-details {
+  margin-bottom: 10px;
+}
+
+.notes-summary {
+  cursor: pointer;
+  font-size: 0.88em;
+  font-weight: 600;
+  color: #007bff;
+  user-select: none;
+  padding: 2px 0;
+}
+
+.during-notes {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.during-notes li {
+  font-size: 0.85em;
+  color: #555;
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+.note-time {
+  color: #888;
+  font-size: 0.9em;
+}
+
+.after-note {
+  background: #fffbf0;
+  border-left: 3px solid #f39c12;
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  margin-bottom: 10px;
+  font-size: 0.88em;
+  color: #555;
+  line-height: 1.6;
+}
+
+.after-note-label {
+  font-weight: 700;
+  color: #e67e22;
+  margin-bottom: 4px;
+  font-size: 0.9em;
+}
+
+.riders-row {
+  font-size: 0.82em;
+  color: #888;
+  line-height: 1.6;
+  margin-top: 4px;
+}
+
+.riders-list {
+  color: #666;
 }
 
 /* ── Responsive ── */

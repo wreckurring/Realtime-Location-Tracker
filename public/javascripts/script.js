@@ -7,6 +7,8 @@ const STOPPED_CHECK_INTERVAL_MS = 15000;
 const STOPPED_DISTANCE_THRESHOLD_M = 10;
 
 let rideStarted = false;
+let activeDestination = null;
+let lastSavedTripId = null;
 
 const sendLocation = () => {
   if (!navigator.geolocation) return;
@@ -152,6 +154,21 @@ const updateLocationList = (id, name, latitude, longitude, isStopped = false) =>
     document.createTextNode(`: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`)
   );
 
+  if (activeDestination && id !== "waypoint" && id !== "destination") {
+    const distM = calculateDistance(
+      latitude, longitude,
+      activeDestination.lat, activeDestination.lng
+    );
+    const distStr =
+      distM >= 1000
+        ? `${(distM / 1000).toFixed(1)} km to dest`
+        : `${Math.round(distM)} m to dest`;
+    const distEl = document.createElement("span");
+    distEl.className = "dest-distance";
+    distEl.textContent = ` · ${distStr}`;
+    item.appendChild(distEl);
+  }
+
   if (isStopped) {
     const tag = document.createElement("span");
     tag.className = "stopped-tag";
@@ -291,6 +308,13 @@ socket.on("ride-stopped", () => {
   setRideStatus(false);
   clearAllStoppedStates();
   showToast("🏁 Ride ended.");
+  if (currentUser.role === "leader") {
+    document.getElementById("post-ride-modal").style.display = "flex";
+  }
+});
+
+socket.on("trip-saved", ({ tripId }) => {
+  lastSavedTripId = tripId;
 });
 
 // Announcements
@@ -340,8 +364,57 @@ if (currentUser.role === "leader") {
     if (e.key === "Enter") announcementBtn.click();
   });
 
+  // During-ride notes
+  const saveNoteBtn = document.getElementById("save-note-btn");
+  const noteInput = document.getElementById("note-input");
+  const savedNotesList = document.getElementById("saved-notes-list");
+
+  saveNoteBtn.addEventListener("click", () => {
+    const text = noteInput.value.trim();
+    if (!text || !rideStarted) {
+      if (!rideStarted) showToast("Start the ride before adding notes.");
+      return;
+    }
+    socket.emit("add-note", { text, type: "during" });
+    noteInput.value = "";
+  });
+
+  noteInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      saveNoteBtn.click();
+    }
+  });
+
+  socket.on("note-saved", ({ text, time }) => {
+    const div = document.createElement("div");
+    div.className = "saved-note";
+    div.textContent = `[${time}] ${text}`;
+    savedNotesList.prepend(div);
+  });
+
+  // Post-ride modal
+  const savePostNoteBtn = document.getElementById("save-post-note-btn");
+  const skipPostNoteBtn = document.getElementById("skip-post-note-btn");
+  const postNoteInput = document.getElementById("post-note-input");
+
+  savePostNoteBtn.addEventListener("click", () => {
+    const text = postNoteInput.value.trim();
+    if (text && lastSavedTripId) {
+      socket.emit("add-note", { text, type: "after", tripId: lastSavedTripId });
+    }
+    document.getElementById("post-ride-modal").style.display = "none";
+    postNoteInput.value = "";
+    savedNotesList.innerHTML = "";
+  });
+
+  skipPostNoteBtn.addEventListener("click", () => {
+    document.getElementById("post-ride-modal").style.display = "none";
+    postNoteInput.value = "";
+    savedNotesList.innerHTML = "";
+  });
+
   // Destination
-  let destinationMarker = null;
   let destinationMode = false;
 
   const destinationBtn = document.getElementById("destination-btn");
@@ -367,7 +440,7 @@ if (currentUser.role === "leader") {
     socket.emit("clear-destination");
   });
 
-  // Waypoint placement / destination placement
+  // Waypoint / destination placement
   let manualMarker = null;
   map.on("click", (e) => {
     const { lat, lng } = e.latlng;
@@ -392,6 +465,7 @@ if (currentUser.role === "leader") {
         .bindPopup("Waypoint")
         .addTo(map);
       updateLocationList("waypoint", "Waypoint", lat, lng, false);
+      if (rideStarted) socket.emit("place-waypoint", { name: "Waypoint", lat, lng });
     }
   });
 }
@@ -400,6 +474,8 @@ if (currentUser.role === "leader") {
 let destinationMarkerGlobal = null;
 
 socket.on("destination-set", ({ lat, lng, name }) => {
+  activeDestination = { lat, lng, name };
+
   if (destinationMarkerGlobal) map.removeLayer(destinationMarkerGlobal);
   destinationMarkerGlobal = L.marker([lat, lng], { icon: destinationIcon })
     .bindPopup(`<div style="min-width:100px"><strong>📍 ${name}</strong></div>`)
@@ -422,9 +498,19 @@ socket.on("destination-set", ({ lat, lng, name }) => {
   }
 
   showToast(`📍 Destination set: ${name}`);
+
+  // Refresh distances in location list
+  Object.keys(positions).forEach((id) => {
+    if (userDataMap[id]) {
+      const { name: rName, latitude, longitude } = userDataMap[id];
+      updateLocationList(id, rName, latitude, longitude, !!stoppedState[id]);
+    }
+  });
 });
 
 socket.on("destination-cleared", () => {
+  activeDestination = null;
+
   if (destinationMarkerGlobal) {
     map.removeLayer(destinationMarkerGlobal);
     destinationMarkerGlobal = null;
@@ -435,4 +521,12 @@ socket.on("destination-cleared", () => {
     document.getElementById("clear-destination-btn").style.display = "none";
   }
   showToast("📍 Destination cleared.");
+
+  // Refresh list to remove distance spans
+  Object.keys(positions).forEach((id) => {
+    if (userDataMap[id]) {
+      const { name: rName, latitude, longitude } = userDataMap[id];
+      updateLocationList(id, rName, latitude, longitude, !!stoppedState[id]);
+    }
+  });
 });
