@@ -42,7 +42,7 @@ Visit `/history` (linked in the tracker header) to browse all recorded rides. Ea
 - Timestamped notes from during the ride
 - Post-ride leader advice for future groups
 
-5 demo rides are pre-loaded on first startup, all originating from Army Institute of Technology, Pune.
+5 demo rides are pre-loaded, all originating from Army Institute of Technology, Pune.
 
 ## Tech Stack
 
