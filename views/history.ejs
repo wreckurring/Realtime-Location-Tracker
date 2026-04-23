@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trip History - CycloTrack</title>
+    <link rel="stylesheet" href="/stylesheets/style.css" />
+  </head>
+  <body class="history-page">
+    <div class="history-topbar">
+      <a href="/" class="back-link">← Back to Tracker</a>
+      <h1>Trip History</h1>
+      <span class="topbar-user"><%= user.name %></span>
+    </div>
+
+    <%
+      const totalTrips = trips.length;
+      const avgRiders = totalTrips
+        ? Math.round(trips.reduce((s, t) => s + (t.riderCount || 0), 0) / totalTrips)
+        : 0;
+
+      const destCount = {};
+      trips.forEach(t => {
+        if (t.destination && t.destination.name) {
+          destCount[t.destination.name] = (destCount[t.destination.name] || 0) + 1;
+        }
+      });
+      const topDest = Object.keys(destCount).sort((a, b) => destCount[b] - destCount[a])[0] || "—";
+    %>
+
+    <div class="stat-strip">
+      <div class="stat-card">
+        <div class="stat-value"><%= totalTrips %></div>
+        <div class="stat-label">Total Trips</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value"><%= avgRiders %></div>
+        <div class="stat-label">Avg Riders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value dest-name"><%= topDest %></div>
+        <div class="stat-label">Top Destination</div>
+      </div>
+    </div>
+
+    <% if (trips.length === 0) { %>
+      <div class="no-trips">No trips recorded yet. Complete a ride to see history here.</div>
+    <% } %>
+
+    <div class="trip-list">
+      <% trips.forEach(trip => { %>
+        <div class="trip-card <%= trip.isDemo ? 'demo-card' : '' %>">
+          <div class="trip-header">
+            <div class="trip-meta">
+              <span class="trip-date"><%= trip.date %></span>
+              <% if (trip.isDemo) { %>
+                <span class="demo-badge">Demo</span>
+              <% } %>
+              <span class="trip-duration"><%= trip.duration %></span>
+            </div>
+            <div class="trip-leader">Led by <strong><%= trip.leaderName %></strong></div>
+          </div>
+
+          <% if (trip.destination && trip.destination.name) { %>
+            <div class="trip-dest">
+              <span class="dest-pin">📍</span>
+              <strong><%= trip.destination.name %></strong>
+            </div>
+          <% } %>
+
+          <div class="trip-stats-row">
+            <span class="trip-stat">🚴 <%= trip.riderCount %> rider<%= trip.riderCount !== 1 ? 's' : '' %></span>
+            <span class="trip-stat">🕐 <%= trip.startTime %> – <%= trip.endTime %></span>
+          </div>
+
+          <% if (trip.waypoints && trip.waypoints.length > 0) { %>
+            <div class="waypoints-row">
+              <span class="section-label">Route: </span>
+              <span class="route-string">
+                AIT
+                <% trip.waypoints.forEach(wp => { %>
+                  → <span class="wp-name"><%= wp.name %></span>
+                <% }) %>
+                <% if (trip.destination && trip.destination.name) { %>
+                  → <strong><%= trip.destination.name %></strong>
+                <% } %>
+              </span>
+            </div>
+          <% } %>
+
+          <% if (trip.notes && trip.notes.during && trip.notes.during.length > 0) { %>
+            <details class="notes-details">
+              <summary class="notes-summary">📝 Ride Notes (<%= trip.notes.during.length %>)</summary>
+              <ul class="during-notes">
+                <% trip.notes.during.forEach(n => { %>
+                  <li><span class="note-time">[<%= n.time %>]</span> <%= n.text %></li>
+                <% }) %>
+              </ul>
+            </details>
+          <% } %>
+
+          <% if (trip.notes && trip.notes.after) { %>
+            <div class="after-note">
+              <div class="after-note-label">💡 Leader advice</div>
+              <%= trip.notes.after %>
+            </div>
+          <% } %>
+
+          <% if (trip.riderNames && trip.riderNames.length > 0) { %>
+            <div class="riders-row">
+              <span class="section-label">Riders: </span>
+              <span class="riders-list"><%= trip.riderNames.join(", ") %></span>
+            </div>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  </body>
+</html>

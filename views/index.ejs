@@ -31,6 +31,7 @@
             <span class="leader-badge">Ride Leader</span>
           <% } %>
         </span>
+        <a href="/history" class="history-link">History</a>
         <a href="/logout" class="logout-btn">Leave</a>
       </div>
     </div>
@@ -50,12 +51,31 @@
         <input type="text" id="announcement-input" placeholder="Send announcement to all riders..." maxlength="200" />
         <button id="announcement-btn">Send</button>
       </div>
+      <div id="notes-section">
+        <textarea id="note-input" placeholder="Add a ride note (only during active ride)..." rows="2" maxlength="300"></textarea>
+        <button id="save-note-btn">Save Note</button>
+        <div id="saved-notes-list"></div>
+      </div>
     </div>
     <% } %>
 
     <div id="destination-hint" style="display:none">Click anywhere on the map to place the destination pin</div>
 
     <div id="toast-container"></div>
+
+    <% if (user.role === 'leader') { %>
+    <div id="post-ride-modal" style="display:none">
+      <div id="post-ride-card">
+        <h3>Post-ride notes</h3>
+        <p>Leave route advice for future leaders (optional).</p>
+        <textarea id="post-note-input" rows="4" maxlength="500" placeholder="Route tips, hazards, good stops..."></textarea>
+        <div class="post-ride-btns">
+          <button id="save-post-note-btn" class="start-btn">Save</button>
+          <button id="skip-post-note-btn" class="clear-destination-btn">Skip</button>
+        </div>
+      </div>
+    </div>
+    <% } %>
 
     <div id="map" style="height: 500px"></div>
     <div id="location-data">
